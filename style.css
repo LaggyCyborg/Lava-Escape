@@ -1,0 +1,274 @@
+body {
+    background-color: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+}
+
+#game-container {
+    width: 480px;
+    height: 640px;
+    background: linear-gradient(to bottom, #160826, #07020d);
+    border: 6px solid #2d1447;
+    box-shadow: 0 0 35px rgba(0,0,0,0.9);
+    position: relative;
+    overflow: hidden;
+}
+
+#world {
+    position: absolute;
+    width: 480px;
+    height: 100%;
+    bottom: 0;
+    left: 0;
+}
+
+/* Intricate 8x8 Pixel Runner Sprite */
+#player {
+    width: 4px;
+    height: 4px;
+    background-color: transparent;
+    position: absolute;
+    z-index: 5;
+    transition: transform 0.1s ease;
+    box-shadow:
+        /* Legs */   8px -4px 0 #ffd700, 16px -4px 0 #ffd700, 8px -8px 0 #555555, 16px -8px 0 #555555,
+        /* Armor */  8px -12px 0 #0097a7, 12px -12px 0 #00bcd4, 16px -12px 0 #00bcd4,
+        /* Cape */   4px -12px 0 #d50000, 4px -16px 0 #ff1744, 4px -20px 0 #ff1744,
+        /* Torso */  8px -16px 0 #333333, 12px -16px 0 #00bcd4, 16px -16px 0 #333333,
+        /* Face */   8px -20px 0 #ffdbac, 12px -20px 0 #000000, 16px -20px 0 #ffdbac,
+        /* Helmet */ 16px -24px 0 #d4af37, 8px -24px 0 #ffd700, 12px -24px 0 #ffd700, 8px -28px 0 #ffd700, 12px -28px 0 #ffd700;
+}
+
+.player.stunned {
+    filter: brightness(1.5) hue-rotate(180deg) saturate(2);
+}
+
+.platform {
+    position: absolute;
+    height: 24px;
+    image-rendering: pixelated;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+/* 1. Regular Stone Brick Platform */
+.platform.normal {
+    background-color: #5a5a5a;
+    background-image: 
+        linear-gradient(90deg, #3a3a3a 2px, transparent 2px),
+        linear-gradient(#444 2px, transparent 2px);
+    background-size: 16px 12px;
+    box-shadow: 
+        inset 0 3px 0 #888, 
+        inset 3px 0 0 #888,
+        inset 0 -3px 0 #222, 
+        inset -3px 0 0 #222;
+}
+
+/* 2. Breakable Cracked Sandstone Platform */
+.platform.breakable {
+    background-color: #c29953;
+    background-image: radial-gradient(#78571d 20%, transparent 20%);
+    background-size: 8px 8px;
+    box-shadow: 
+        inset 0 3px 0 #e6c587, 
+        inset 0 -3px 0 #543f18,
+        5px 6px 0 #423010, 12px 14px 0 #423010, 30px 4px 0 #423010;
+}
+.platform.breakable.cracked {
+    transform: translateY(4px);
+    filter: brightness(0.6);
+}
+
+/* 3. Rare Freezing Cryo-Platform */
+.platform.freeze {
+    background-color: #00e5ff;
+    box-shadow: 0 0 15px rgba(0,229,255,0.8);
+}
+.platform.freeze.used {
+    background-color: #00838f;
+    box-shadow: inset 0 3px 0 #00acc1;
+    filter: grayscale(0.8);
+}
+
+/* 4. Red Spiked Hazard Cubes */
+.spike-obstacle {
+    position: absolute;
+    height: 24px; 
+    width: 24px;
+    background-color: #2a080c; 
+    background-image: 
+        linear-gradient(45deg, #ff3344 25%, transparent 25%, transparent 75%, #ff3344 75%, #ff3344),
+        linear-gradient(45deg, #ff3344 25%, transparent 25%, transparent 75%, #ff3344 75%, #ff3344);
+    background-size: 12px 12px;
+    background-position: 0 0, 6px 6px;
+    box-shadow: 
+        inset 0 0 10px #721c24,
+        0 0 12px rgba(255, 51, 68, 0.4);
+    border: 2px solid #ff3344;
+    box-sizing: border-box;
+    z-index: 6; 
+}
+
+/* 5. Glacial Freeze Hazard Cubes */
+.freeze-obstacle {
+    position: absolute;
+    height: 24px; 
+    width: 24px;
+    background-color: #0d2b45; 
+    background-image: 
+        linear-gradient(135deg, #00bfff 25%, transparent 25%, transparent 75%, #00bfff 75%, #00bfff),
+        linear-gradient(45deg, #1e90ff 25%, transparent 25%, transparent 75%, #1e90ff 75%, #1e90ff);
+    background-size: 12px 12px;
+    box-shadow: 
+        inset 0 0 10px #003366,
+        0 0 15px rgba(0, 191, 255, 0.6);
+    border: 2px solid #00bfff;
+    box-sizing: border-box;
+    z-index: 6; 
+}
+
+/* EXTRA-SMALL HIGH-DENSITY LAVA NOISE MATRIX */
+#lava {
+    position: absolute;
+    width: 480px;
+    height: 1000px; 
+    background-color: #d34600; /* Deep red-orange magma base */
+    z-index: 4;
+    left: 0;
+    box-shadow: 0 -25px 45px #ff6a00, 0 -50px 90px #ffa600; /* Intense neon orange outer glows */
+    overflow: hidden;
+}
+
+/* High-density layout generates randomized 4px square noise blocks */
+#lava::before {
+    content: '';
+    position: absolute;
+    width: 4px;  /* Shrunk down from 16px to an extra-small 4px grid pixel block */
+    height: 4px;
+    background: #ff6a00; /* Warm, molten neon orange glowing squares */
+    
+    /* Intricate pixel noise cluster coordinates scattered cross-screen */
+    box-shadow: 
+        /* Neon orange fire specks loop 1 */
+        16px 24px 0 #ff6a00, 48px 12px 0 #ffa600, 80px 56px 0 #ff6a00, 112px 32px 0 #ffa600, 144px 80px 0 #ff6a00, 176px 44px 0 #ffa600, 208px 96px 0 #ff6a00, 240px 16px 0 #ffa600, 272px 72px 0 #ff6a00, 304px 40px 0 #ffa600, 336px 88px 0 #ff6a00, 368px 24px 0 #ffa600, 400px 64px 0 #ff6a00, 448px 12px 0 #ffa600,
+        /* Darker volcanic debris bits */
+        8px 48px 0 #990000, 40px 84px 0 #7a0010, 72px 16px 0 #990000, 128px 64px 0 #7a0010, 160px 112px 0 #990000, 192px 28px 0 #7a0010, 224px 76px 0 #990000, 256px 124px 0 #7a0010, 288px 52px 0 #990000, 320px 104px 0 #7a0010, 352px 36px 0 #990000, 384px 92px 0 #7a0010, 416px 44px 0 #990000, 460px 80px 0 #7a0010,
+        /* Mid-tone orange secondary clusters */
+        24px 140px 0 #ff9800, 88px 160px 0 #ff9800, 152px 130px 0 #ff9800, 216px 170px 0 #ff9800, 280px 145px 0 #ff9800, 344px 180px 0 #ff9800, 408px 125px 0 #ff9800;
+    
+    image-rendering: pixelated;
+    animation: mcFineShatterFlow 1.4s steps(4) infinite;
+}
+
+/* Secondary layer overlays 8px chunk shards to mimic shifting surface crust density variations */
+#lava::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #7a0010; /* Dark volcanic crust element boxes */
+    box-shadow: 
+        32px 180px 0 #7a0010, 96px 210px 0 #ff6a00, 160px 175px 0 #7a0010, 224px 220px 0 #ffa600, 288px 190px 0 #7a0010, 352px 240px 0 #ff6a00, 416px 165px 0 #7a0010,
+        /* Stretching duplicate layers down for layout looping fluidity */
+        64px 320px 0 #ff9800, 128px 360px 0 #7a0010, 256px 340px 0 #ff6a00, 384px 390px 0 #7a0010, 432px 310px 0 #ffa600;
+    
+    image-rendering: pixelated;
+    animation: mcFineShatterFlow 2.0s steps(4) infinite reverse; /* Opposing vectors create heavy noise chaos */
+}
+
+/* HIGH-DENSITY GLACIAL ICE CHUNKS LAYER */
+#lava.frozen {
+    background-color: #004d40;
+    box-shadow: 0 -25px 45px #00838f, 0 -50px 90px #00e5ff;
+}
+#lava.frozen::before {
+    background: #00e5ff;
+    box-shadow: 
+        16px 24px 0 #00e5ff, 48px 12px 0 #80deea, 80px 56px 0 #00e5ff, 112px 32px 0 #80deea,
+        8px 48px 0 #004d40, 40px 84px 0 #006064, 72px 16px 0 #004d40, 128px 64px 0 #006064,
+        24px 140px 0 #00838f, 88px 160px 0 #00838f, 152px 130px 0 #00838f;
+    animation-play-state: paused;
+}
+#lava.frozen::after {
+    background: #006064;
+    box-shadow: 
+        32px 180px 0 #006064, 96px 210px 0 #00e5ff, 160px 175px 0 #006064, 224px 220px 0 #80deea,
+        64px 320px 0 #00838f, 128px 360px 0 #006064, 256px 340px 0 #00e5ff;
+    animation-play-state: paused;
+}
+
+/* Smooth step progression tracking frame offsets */
+@keyframes mcFineShatterFlow {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(128px); } /* Loops seamless fine particle fields */
+}
+
+.pixel-particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#hud {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #000;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#freeze-timer {
+    color: #00e5ff;
+    font-size: 16px;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(10, 4, 20, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 20;
+    text-align: center;
+}
+
+.overlay h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+    color: #ff9100;
+    text-shadow: 3px 3px 0 #3a1d5d;
+}
+
+button {
+    background-color: #ff9100;
+    color: #111;
+    border: 4px solid #fff;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-family: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #ffea00;
+}
