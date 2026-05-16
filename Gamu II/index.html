@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lava Escape Parkour</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="world">
+            <div id="platforms-container"></div>
+            <div id="particle-container"></div>
+            <div id="player"></div>
+            <div id="lava"></div>
+        </div>
+        <div id="hud">
+            <div id="height-score">Height: 0m</div>
+            <div id="freeze-timer" style="display: none;">LAVA FROZEN: 2.0s</div>
+            <div id="player-freeze-timer" style="display: none; color: #00e5ff;">FROZEN: 1.5s</div>
+        </div>
+        <div id="start-screen" class="overlay">
+            <h1>LAVA ESCAPE</h1>
+            <p>LEFT / RIGHT Arrows to Move.<br>SPACEBAR or UP Arrow to Jump.<br><br>🚨 Avoid Red Spike Cubes!<br>❄️ Avoid Dark Blue Freeze Hazards!<br>🧊 Touch Cyan Blocks to Freeze Lava!</p>
+            <button onclick="startGame()">START GAME</button>
+        </div>
+        <div id="game-over-screen" class="overlay" style="display: none;">
+            <h1>YOU BURNED!</h1>
+            <p id="final-score">You climbed: 0m</p>
+            <button onclick="resetGame()">TRY AGAIN</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
